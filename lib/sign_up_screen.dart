@@ -96,7 +96,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
               email: _emailTEController.text.trim(),
               password: _passwordTEController.text,
             );
-        print(userCredential);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('New account has been created!')));
       } on Exception catch (e) {
         ScaffoldMessenger.of(
           context,
@@ -106,6 +106,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
         setState(() {});
       }
     }
+  }
+
+  void _clearTextFiled(){
+    _emailTEController.clear();
+    _passwordTEController.clear();
+    _confirmPasswordTEController.clear();
   }
 
   @override
