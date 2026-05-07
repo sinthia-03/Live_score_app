@@ -1,24 +1,22 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:live_score_app/sign_In_screen.dart';
+import 'package:live_score_app/home_screen.dart';
 
-class SignUpScreen extends StatefulWidget {
-  const SignUpScreen({super.key});
+class SignInScreen extends StatefulWidget {
+  const SignInScreen({super.key});
 
   @override
-  State<SignUpScreen> createState() => _SignUpScreenState();
+  State<SignInScreen> createState() => _SignInScreenState();
 }
 
-class _SignUpScreenState extends State<SignUpScreen> {
+class _SignInScreenState extends State<SignInScreen> {
   final TextEditingController _emailTEController = TextEditingController();
   final TextEditingController _passwordTEController = TextEditingController();
-  final TextEditingController _confirmPasswordTEController =
-      TextEditingController();
 
   final GlobalKey<FormState> _formkey = GlobalKey<FormState>();
 
-  bool _signUpInProgress = false;
+  bool _signInProgress = false;
 
   @override
   Widget build(BuildContext context) {
@@ -58,29 +56,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     return null;
                   },
                 ),
-                TextFormField(
-                  controller: _confirmPasswordTEController,
-                  decoration: InputDecoration(
-                    hintText: 'Confirm Password',
-                    labelText: 'Confirm Password',
-                  ),
-                  validator: (String? value) {
-                    if ((value ?? '') != _passwordTEController.text) {
-                      return 'Does not match with Password';
-                    }
-                  },
-                ),
                 Visibility(
-                  visible: _signUpInProgress == false,
+                  visible: _signInProgress == false,
                   replacement: CircularProgressIndicator(),
                   child: FilledButton(
                     onPressed: _onTapSignUp,
                     child: Text('Sign Up'),
                   ),
                 ),
-
-                TextButton(onPressed: _onTapSignInButton,
-                    child: Text('Sign In')),
+                TextButton(onPressed: _onTapSignUPButton, child: Text('Sign Up')),
               ],
             ),
           ),
@@ -89,8 +73,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
     );
   }
 
-  void _onTapSignInButton(){
-    Navigator.push(context, MaterialPageRoute(builder: (context)=>SignInScreen()),
+  void _onTapSignUPButton(){
+    Navigator.pop(context, MaterialPageRoute(builder: (context)=>SignInScreen()),
     );
   }
 
@@ -98,21 +82,22 @@ class _SignUpScreenState extends State<SignUpScreen> {
     if (_formkey.currentState!.validate()) {
       //TODO: Create a new user
       try {
-        _signUpInProgress = true;
+        _signInProgress = true;
         setState(() {});
-        final UserCredential userCredential = await FirebaseAuth.instance
-            .createUserWithEmailAndPassword(
-              email: _emailTEController.text.trim(),
-              password: _passwordTEController.text,
-            );
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('New account has been created!')));
-        _clearTextFiled();
+        await FirebaseAuth.instance
+            .signInWithEmailAndPassword(
+          email: _emailTEController.text.trim(),
+          password: _passwordTEController.text,
+        );
+        Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context)=>HomeScreen()),
+            (predicate)=>false,
+        );
       } on Exception catch (e) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(e.toString())));
       } finally {
-        _signUpInProgress = false;
+        _signInProgress = false;
         setState(() {});
       }
     }
@@ -121,14 +106,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
   void _clearTextFiled(){
     _emailTEController.clear();
     _passwordTEController.clear();
-    _confirmPasswordTEController.clear();
+
   }
 
   @override
   void dispose() {
     _emailTEController.dispose();
     _passwordTEController.dispose();
-    _confirmPasswordTEController.dispose();
+
     // TODO: implement dispose
     super.dispose();
   }
