@@ -29,7 +29,7 @@ class FootballMatch {
     );
   }
 
-  Map<String, dynamic> toJson() {
+  Map<String, dynamic> toJson() {  //json to
     return {
       'team1_name': team1Name,
       'team2_name': team2Name,

@@ -12,6 +12,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+
   final String _footballCollectionName = 'football';
 
   // bool _getMatchesInProgress = false;
@@ -51,7 +52,7 @@ class _HomeScreenState extends State<HomeScreen> {
           IconButton(onPressed: _onTapLogout, icon: Icon(Icons.logout)),
         ],
       ),
-      body: StreamBuilder(
+      body: StreamBuilder(  // real time data update,manually refresh no need
         stream: FirebaseFirestore.instance
             .collection(_footballCollectionName)
             .snapshots(),
@@ -61,11 +62,13 @@ class _HomeScreenState extends State<HomeScreen> {
             AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>> asyncSnapshot,
             ) {
           if (asyncSnapshot.connectionState == .waiting) {
-            return Center(child: CircularProgressIndicator());
+            return Center(child: CircularProgressIndicator()
+            );
           }
 
           if (asyncSnapshot.hasError) {
-            return Center(child: Text(asyncSnapshot.error.toString()));
+            return Center(child: Text(asyncSnapshot.error.toString())
+            );
           }
 
           if (asyncSnapshot.hasData == false) {
@@ -88,7 +91,7 @@ class _HomeScreenState extends State<HomeScreen> {
               final FootballMatch match = footballMatchesList[index];
 
               return Dismissible(
-                key: Key(match.id),
+                key: Key(match.id), //object key
                 onDismissed: (_) {
                   _deleteMatchItem(match.id);
                 },
@@ -135,10 +138,11 @@ class _HomeScreenState extends State<HomeScreen> {
       // FirebaseFirestore.instance
       //     .collection(_footballCollectionName)
       //     .add(newFootballMatch.toJson());
-      // FirebaseFirestore.instance
+      // FirebaseFirestore.instance // update item
       //     .collection(_footballCollectionName)
       //     .doc(newFootballMatch.id) // Because of this id
       //     .update(newFootballMatch.toJson());
+
       FirebaseFirestore.instance
           .collection(_footballCollectionName)
           .doc(newFootballMatch.id) // Because of this id
