@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:live_score_app/football_match.dart';
 
 
@@ -14,6 +15,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
 
   final String _footballCollectionName = 'football';
+  BannerAd? _bannerAd;
 
   // bool _getMatchesInProgress = false;
   // List<FootballScore> _footballMatchesList = [];
@@ -42,6 +44,46 @@ class _HomeScreenState extends State<HomeScreen> {
   //   _getMatchesInProgress = false;
   //   setState(() {});
   // }
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_){
+      _loadAd();
+    });
+  }
+
+  void _loadAd() async {
+    // Get an AnchoredAdaptiveBannerAdSize before loading the ad.
+    final size = await AdSize.getLargeAnchoredAdaptiveBannerAdSize(
+      MediaQuery.sizeOf(context).width.truncate(),
+    );
+
+    if (size == null) {
+      // Unable to get width of anchored banner.
+      return;
+    }
+
+    BannerAd(
+      adUnitId: "ca-app-pub-3940256099942544/9214589741",
+      request: const AdRequest(),
+      size: size,
+      listener: BannerAdListener(
+        onAdLoaded: (ad) {
+          // Called when an ad is successfully received.
+          debugPrint("Ad was loaded.");
+          setState(() {
+            _bannerAd = ad as BannerAd;
+          });
+        },
+        onAdFailedToLoad: (ad, err) {
+          // Called when an ad request failed.
+          debugPrint("Ad failed to load with error: $err");
+          ad.dispose();
+        },
+      ),
+    ).load();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -52,68 +94,80 @@ class _HomeScreenState extends State<HomeScreen> {
           IconButton(onPressed: _onTapLogout, icon: Icon(Icons.logout)),
         ],
       ),
-      body: StreamBuilder(  // real time data update,manually refresh no need
-        stream: FirebaseFirestore.instance
-            .collection(_footballCollectionName)
-            .snapshots(),
-        builder:
-            (
-            context,
-            AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>> asyncSnapshot,
-            ) {
-          if (asyncSnapshot.connectionState == .waiting) {
-            return Center(child: CircularProgressIndicator()
-            );
-          }
+      body: Column(
+        children: [
+          if(_bannerAd != null)
+            SizedBox(
+              width: _bannerAd!.size.width.toDouble(),
+              height: _bannerAd!.size.height.toDouble(),
+              child: AdWidget(ad: _bannerAd!),
+            ),
+          Expanded(
+            child: StreamBuilder(  // real time data update,manually refresh no need
+              stream: FirebaseFirestore.instance
+                  .collection(_footballCollectionName)
+                  .snapshots(),
+              builder:
+                  (
+                  context,
+                  AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>> asyncSnapshot,
+                  ) {
+                if (asyncSnapshot.connectionState == .waiting) {
+                  return Center(child: CircularProgressIndicator()
+                  );
+                }
 
-          if (asyncSnapshot.hasError) {
-            return Center(child: Text(asyncSnapshot.error.toString())
-            );
-          }
+                if (asyncSnapshot.hasError) {
+                  return Center(child: Text(asyncSnapshot.error.toString())
+                  );
+                }
 
-          if (asyncSnapshot.hasData == false) {
-            return Center(child: Text('No data available'));
-          }
+                if (asyncSnapshot.hasData == false) {
+                  return Center(child: Text('No data available'));
+                }
 
-          List<FootballMatch> footballMatchesList = [];
-          for (QueryDocumentSnapshot doc in asyncSnapshot.data!.docs) {
-            footballMatchesList.add(
-              FootballMatch.fromJson(
-                doc.id,
-                doc.data() as Map<String, dynamic>,
-              ),
-            );
-          }
+                List<FootballMatch> footballMatchesList = [];
+                for (QueryDocumentSnapshot doc in asyncSnapshot.data!.docs) {
+                  footballMatchesList.add(
+                    FootballMatch.fromJson(
+                      doc.id,
+                      doc.data() as Map<String, dynamic>,
+                    ),
+                  );
+                }
 
-          return ListView.separated(
-            itemCount: footballMatchesList.length,
-            itemBuilder: (context, index) {
-              final FootballMatch match = footballMatchesList[index];
+                return ListView.separated(
+                  itemCount: footballMatchesList.length,
+                  itemBuilder: (context, index) {
+                    final FootballMatch match = footballMatchesList[index];
 
-              return Dismissible(
-                key: Key(match.id), //object key
-                onDismissed: (_) {
-                  _deleteMatchItem(match.id);
-                },
-                child: ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: match.isRunning
-                        ? Colors.green
-                        : Colors.grey,
-                    radius: 8,
-                  ),
-                  title: Text('${match.team1Name} vs ${match.team2Name}'),
-                  subtitle: Text('Winner team: ${match.winnerTeam}'),
-                  trailing: Text(
-                    '${match.team1Score} - ${match.team2Score}',
-                    style: TextStyle(fontSize: 20),
-                  ),
-                ),
-              );
-            },
-            separatorBuilder: (_, _) => Divider(height: 8),
-          );
-        },
+                    return Dismissible(
+                      key: Key(match.id), //object key
+                      onDismissed: (_) {
+                        _deleteMatchItem(match.id);
+                      },
+                      child: ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor: match.isRunning
+                              ? Colors.green
+                              : Colors.grey,
+                          radius: 8,
+                        ),
+                        title: Text('${match.team1Name} vs ${match.team2Name}'),
+                        subtitle: Text('Winner team: ${match.winnerTeam}'),
+                        trailing: Text(
+                          '${match.team1Score} - ${match.team2Score}',
+                          style: TextStyle(fontSize: 20),
+                        ),
+                      ),
+                    );
+                  },
+                  separatorBuilder: (_, _) => Divider(height: 8),
+                );
+              },
+            ),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _onTapAddButton,
@@ -172,5 +226,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _onTapLogout() {
     FirebaseAuth.instance.signOut();
+
+  }
+  @override
+  void dispose() {
+    _bannerAd?.dispose();
+    // TODO: implement dispose
+    super.dispose();
   }
 }
