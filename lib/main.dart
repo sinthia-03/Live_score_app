@@ -25,8 +25,8 @@ Future<void> main() async{
     return true;
   };
 
-  FcmUtilis.initialize();
-
+  await FcmUtilis.initialize();
+  print(await FcmUtilis.getFCMToken());
   runApp(const MyApp());
 }
 

@@ -58,6 +58,21 @@ class FcmUtilis {
       );
     }
   }
+
+  static Future<String?> getFCMToken() async{
+    //TODO: send to the backend while you are logging in
+    String? fcmToken = await FirebaseMessaging.instance.getToken();
+    return fcmToken;
+
+  }
+  static Future<void> onRefreshToken() async{
+    FirebaseMessaging.instance.onTokenRefresh.listen((newToken){
+
+      // TODO: send to backend api(refresh token
+    });
+  }
+
+
 }
 
 // Eta class er bairei thakte hobe (Top-level function)
