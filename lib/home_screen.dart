@@ -53,7 +53,7 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  void _loadAd() async {
+  void _loadAd() async {        // bnanar adds
     // Get an AnchoredAdaptiveBannerAdSize before loading the ad.
     final size = await AdSize.getLargeAnchoredAdaptiveBannerAdSize(
       MediaQuery.sizeOf(context).width.truncate(),
@@ -65,7 +65,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     BannerAd(
-      adUnitId: "ca-app-pub-3940256099942544/9214589741",
+      adUnitId: "ca-app-pub-3940256099942544/9214589741", // unit id
       request: const AdRequest(),
       size: size,
       listener: BannerAdListener(
@@ -96,12 +96,6 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: Column(
         children: [
-          if(_bannerAd != null)
-            SizedBox(
-              width: _bannerAd!.size.width.toDouble(),
-              height: _bannerAd!.size.height.toDouble(),
-              child: AdWidget(ad: _bannerAd!),
-            ),
           Expanded(
             child: StreamBuilder(  // real time data update,manually refresh no need
               stream: FirebaseFirestore.instance
@@ -167,6 +161,13 @@ class _HomeScreenState extends State<HomeScreen> {
               },
             ),
           ),
+          if(_bannerAd != null)
+            SizedBox(
+              width: _bannerAd!.size.width.toDouble(),
+              height: _bannerAd!.size.height.toDouble(),
+              child: AdWidget(ad: _bannerAd!),
+            ),
+
         ],
       ),
       floatingActionButton: FloatingActionButton(

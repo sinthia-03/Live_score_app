@@ -27,10 +27,10 @@ Future<void> main() async{
   };
 
   await FcmUtilis.initialize();
-  print(await FcmUtilis.getFCMToken());
+  print(await FcmUtilis.getFCMToken()); // FCm token
 
   // Initialize the Mobile Ads SDK.
-  MobileAds.instance.initialize();
+  MobileAds.instance.initialize(); // admob
   runApp(const MyApp());
 }
 
